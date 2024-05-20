@@ -1,0 +1,80 @@
+version: "3.9"
+services:
+  api:
+    container_name: saraa-api
+    image: nours313/saraa-api:latest
+    environment:
+      GIN_MODE: ${GIN_MODE}
+      SERVER_PORT: ${SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      GITHUB_ORG_NAME: ${GITHUB_ORG_NAME}
+      GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL}
+      GIT_USER_NAME: ${GIT_USER_NAME}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      WEBHOOK_API_PATH: ${WEBHOOK_API_PATH}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    links:
+      - database
+    restart: always
+
+  database:
+    container_name: saraa-database
+    image: mariadb:latest
+    #    ports:
+    #      - "3306:3306"
+    restart: always
+    environment:
+      #MYSQL_DATABASE: saraa2_db
+      #MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Europe/Paris
+    volumes:
+      - ./data/databases:/var/lib/mysql
+      - ./install/databases:/docker-entrypoint-initdb.d
+
+  phpmyadmin:
+    container_name: saraa-pma
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 1G
+      MEMORY_LIMIT: 512M
+      MAX_EXECUTION_TIME: 0
+    restart: always
+    links:
+      - database
+    depends_on:
+      - database
+
+  gitea:
+    image: gitea/gitea:1.21.11
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=database:3306
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=gitea
+    restart: always
+    volumes:
+      - ./data/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "222:22"
+    depends_on:
+      - database
+
+volumes:
+  dbdata:

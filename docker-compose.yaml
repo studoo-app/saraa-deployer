@@ -13,6 +13,7 @@ services:
       GIT_USER_NAME: ${GIT_USER_NAME}
       WEBHOOK_URL: ${WEBHOOK_URL}
       WEBHOOK_API_PATH: ${WEBHOOK_API_PATH}
+      DB_URI: ${DB_URI}
     ports:
       - "8080:8080"
     depends_on:
